@@ -20,7 +20,16 @@ enum CloudstoreError: Error {
 
  ///  Manages getting, setting, and removing encrypted keys, phone number and email from iCloud using native API's.
 public class CloudStore {
-
+    /*
+     
+     Model:
+     Phone
+     Email
+     key_id
+     shortKeyID
+     
+     */
+    
     let VERSION = "1"
     let KEY_ID: String
     let PHONE: String
@@ -55,23 +64,26 @@ public class CloudStore {
         removeItem(keyId: KEY_ID)
     }
 
-    func putPhone(userId: String)throws {
+    func putPhone(userId: String) throws {
         /// Save userPhone in local storate /iCloud Storage
         /// - Parameter userId: userId
         /// - Throws: description
         if !Verify.isPhone(userId) {
             throw  CloudstoreError.invalid
         }
+        // Cloudstore has a seperate Phone record
         setItem(keyId: PHONE, value: userId)
     }
 
     func getPhone() -> String? {
         /// - Returns: phone
+        // Cloudstore has a seperate Phone record
         return getItem(keyId: PHONE) as? String
     }
 
     func removePhone() {
         /// - Parameter phone: phone
+        // Cloudstore has a seperate Phone record
         removeItem(keyId: PHONE)
     }
 
@@ -84,18 +96,23 @@ public class CloudStore {
         if !Verify.isEmail(userId) {
             throw  CloudstoreError.invalid
         }
+        // Cloudstore has a seperate Email record
         setItem(keyId: EMAIL, value: userId)
     }
 
     func getEmail() -> String {
         // Get Email address from iCloud
         // - Returns: email address
+        
+        // Cloudstore has a seperate Email record
         return getItem(keyId: EMAIL) as! String
     }
 
     func removeEmail() {
         // Remove Email address from local storate /iCloud Storage
         // - Parameter email:email address
+        
+        // Cloudstore has a seperate Email record
         removeItem(keyId: EMAIL)
     }
     
@@ -117,9 +134,21 @@ public class CloudStore {
         return key
     }
 
-    func setItem(keyId: Any, value: Any) {
+    func setItem(keyId: String, value: Any) {
         let record = CKRecord(recordType: value as! CKRecord.RecordType)
-        record.setValue(keyId, forKey: "keyId")
+        // DETERMINE THE KEY BEING SET (PHONE, EMAIL, KEYID, AND THEN USE IT IN 'forKey')
+        /*
+         
+         KEY_ID = "\(VERSION)_photon_key_id"
+         PHONE = "\(VERSION)_photon_phone"
+         EMAIL = "\(VERSION)_photon_email"
+         */
+        guard let range = keyId.range(of: "_") else {
+            // need to throw
+            return
+        }
+        let key_type = keyId[range.upperBound...].uppercased()
+        record.setValue(keyId, forKey: key_type)
         store.save(record) { (_, error) in
             if error == nil {
                 print("Record Saved")
