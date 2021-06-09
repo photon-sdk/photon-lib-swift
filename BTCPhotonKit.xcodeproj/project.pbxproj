@@ -7,10 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F77D872F25FF6F300091DEF8 /* CloudKitResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77D872E25FF6F300091DEF8 /* CloudKitResponse.swift */; };
 		F79C391D25EBD28C00B2C7A7 /* Alamofire.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F79C38F525EBD00D00B2C7A7 /* Alamofire.framework */; };
 		F79C391E25EBD28C00B2C7A7 /* Alamofire.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = F79C38F525EBD00D00B2C7A7 /* Alamofire.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
-		F7B779C925F53A6F00E7F290 /* StringHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B779C825F53A6F00E7F290 /* StringHelpers.swift */; };
+		F7B0755726711488007DDBEF /* StoreItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0754F26711487007DDBEF /* StoreItem.swift */; };
+		F7B0755C26711553007DDBEF /* CloudDAO.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0755A26711553007DDBEF /* CloudDAO.swift */; };
+		F7B0755D26711553007DDBEF /* CloudKitDAO.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0755B26711553007DDBEF /* CloudKitDAO.swift */; };
+		F7B07566267117C6007DDBEF /* MockServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B07565267117C6007DDBEF /* MockServer.swift */; };
+		F7B0756C267117EF007DDBEF /* MockCloudStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0756A267117EF007DDBEF /* MockCloudStore.swift */; };
+		F7B0756D267117EF007DDBEF /* MockCloudDAO.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0756B267117EF007DDBEF /* MockCloudDAO.swift */; };
+		F7B0757526711CD6007DDBEF /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0757426711CD6007DDBEF /* Network.swift */; };
 		F7BA01C725B34944000B9811 /* BTCPhotonKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7BA01BD25B34943000B9811 /* BTCPhotonKit.framework */; };
 		F7BA01CE25B34944000B9811 /* BTCPhotonKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F7BA01C025B34943000B9811 /* BTCPhotonKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F7BA01DD25B349E9000B9811 /* MockServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BA01D725B349E9000B9811 /* MockServer.swift */; };
@@ -115,6 +120,13 @@
 /* Begin PBXFileReference section */
 		F77D872E25FF6F300091DEF8 /* CloudKitResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudKitResponse.swift; sourceTree = "<group>"; };
 		F79C38EA25EBD00D00B2C7A7 /* Alamofire.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Alamofire.xcodeproj; path = Alamofire/Alamofire.xcodeproj; sourceTree = "<group>"; };
+		F7B0754F26711487007DDBEF /* StoreItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StoreItem.swift; sourceTree = "<group>"; };
+		F7B0755A26711553007DDBEF /* CloudDAO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudDAO.swift; sourceTree = "<group>"; };
+		F7B0755B26711553007DDBEF /* CloudKitDAO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudKitDAO.swift; sourceTree = "<group>"; };
+		F7B07565267117C6007DDBEF /* MockServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockServer.swift; sourceTree = "<group>"; };
+		F7B0756A267117EF007DDBEF /* MockCloudStore.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockCloudStore.swift; sourceTree = "<group>"; };
+		F7B0756B267117EF007DDBEF /* MockCloudDAO.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockCloudDAO.swift; sourceTree = "<group>"; };
+		F7B0757426711CD6007DDBEF /* Network.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Network.swift; sourceTree = "<group>"; };
 		F7B779C825F53A6F00E7F290 /* StringHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringHelpers.swift; sourceTree = "<group>"; };
 		F7BA01BD25B34943000B9811 /* BTCPhotonKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = BTCPhotonKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7BA01C025B34943000B9811 /* BTCPhotonKit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BTCPhotonKit.h; sourceTree = "<group>"; };
@@ -188,6 +200,33 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		F7B0755926711535007DDBEF /* CloudKit */ = {
+			isa = PBXGroup;
+			children = (
+				F7B0755A26711553007DDBEF /* CloudDAO.swift */,
+				F7B0755B26711553007DDBEF /* CloudKitDAO.swift */,
+			);
+			path = CloudKit;
+			sourceTree = "<group>";
+		};
+		F7B07564267117B7007DDBEF /* Mocks */ = {
+			isa = PBXGroup;
+			children = (
+				F7B07565267117C6007DDBEF /* MockServer.swift */,
+				F7B07569267117DA007DDBEF /* Cloudkit */,
+			);
+			path = Mocks;
+			sourceTree = "<group>";
+		};
+		F7B07569267117DA007DDBEF /* Cloudkit */ = {
+			isa = PBXGroup;
+			children = (
+				F7B0756B267117EF007DDBEF /* MockCloudDAO.swift */,
+				F7B0756A267117EF007DDBEF /* MockCloudStore.swift */,
+			);
+			path = Cloudkit;
+			sourceTree = "<group>";
+		};
 		F7BA01B325B34943000B9811 = {
 			isa = PBXGroup;
 			children = (
@@ -213,6 +252,7 @@
 			children = (
 				F7F814F125F3AFD900318B6F /* Helpers */,
 				F7F814E925F3AFD100318B6F /* Models */,
+				F7B0755926711535007DDBEF /* CloudKit */,
 				F7BA01C025B34943000B9811 /* BTCPhotonKit.h */,
 				F7BA01C125B34943000B9811 /* Info.plist */,
 				F7BA01F125B34A29000B9811 /* Network */,
@@ -230,6 +270,7 @@
 		F7BA01CA25B34944000B9811 /* BTCPhotonKitTests */ = {
 			isa = PBXGroup;
 			children = (
+				F7B07564267117B7007DDBEF /* Mocks */,
 				F7BA01D925B349E9000B9811 /* CloudStoreTests.swift */,
 				F7BA01DB25B349E9000B9811 /* CurrencyTests.swift */,
 				F7BA01D825B349E9000B9811 /* KeybackupTests.swift */,
@@ -245,6 +286,7 @@
 		F7BA01F125B34A29000B9811 /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				F7B0757426711CD6007DDBEF /* Network.swift */,
 				F7D0085425F5037E00DEC917 /* APIError.swift */,
 				F7D0085325F5037E00DEC917 /* APIRequest.swift */,
 				F7D0085225F5037E00DEC917 /* HTTPMethod.swift */,
@@ -261,6 +303,7 @@
 				F7F814F425F3B03B00318B6F /* KeyServerResponse.swift */,
 				F77D872E25FF6F300091DEF8 /* CloudKitResponse.swift */,
 				F7F814FC25F3B03B00318B6F /* RateLimitError.swift */,
+				F7B0754F26711487007DDBEF /* StoreItem.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -333,7 +376,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1130;
-				LastUpgradeCheck = 1130;
+				LastUpgradeCheck = 1240;
 				ORGANIZATIONNAME = "Leon Johnson";
 				TargetAttributes = {
 					F7BA01BC25B34943000B9811 = {
@@ -449,9 +492,11 @@
 				F7D0085825F5037E00DEC917 /* HTTPMethod.swift in Sources */,
 				F7D0085B25F5037E00DEC917 /* NetworkEncodingType.swift in Sources */,
 				F7BA01EB25B34A1A000B9811 /* Currency.swift in Sources */,
+				F7B0757526711CD6007DDBEF /* Network.swift in Sources */,
 				F7BA01E825B34A1A000B9811 /* Keyserver.swift in Sources */,
-				F77D872F25FF6F300091DEF8 /* CloudKitResponse.swift in Sources */,
+				F7B0755726711488007DDBEF /* StoreItem.swift in Sources */,
 				F7BA01E925B34A1A000B9811 /* Keybackup.swift in Sources */,
+				F7B0755D26711553007DDBEF /* CloudKitDAO.swift in Sources */,
 				F7BA01EC25B34A1A000B9811 /* Validation.swift in Sources */,
 				F7F8150225F3B04700318B6F /* Data+Extension.swift in Sources */,
 				F7F814FE25F3B03B00318B6F /* RateLimitError.swift in Sources */,
@@ -459,9 +504,9 @@
 				F7BA01EA25B34A1A000B9811 /* CloudStore.swift in Sources */,
 				F7D0085725F5037E00DEC917 /* NetworkingLayer.swift in Sources */,
 				F7F8150325F3B04700318B6F /* String+URL+Extension.swift in Sources */,
-				F7B779C925F53A6F00E7F290 /* StringHelpers.swift in Sources */,
 				F7D0085A25F5037E00DEC917 /* APIError.swift in Sources */,
 				F7D0085925F5037E00DEC917 /* APIRequest.swift in Sources */,
+				F7B0755C26711553007DDBEF /* CloudDAO.swift in Sources */,
 				F7F814FD25F3B03B00318B6F /* KeyServerResponse.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -470,10 +515,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F7B0756D267117EF007DDBEF /* MockCloudDAO.swift in Sources */,
+				F7B0756C267117EF007DDBEF /* MockCloudStore.swift in Sources */,
 				F7BA01DD25B349E9000B9811 /* MockServer.swift in Sources */,
 				F7BA01DE25B349E9000B9811 /* KeybackupTests.swift in Sources */,
 				F7BA01DF25B349E9000B9811 /* CloudStoreTests.swift in Sources */,
 				F7BA01E125B349E9000B9811 /* CurrencyTests.swift in Sources */,
+				F7B07566267117C6007DDBEF /* MockServer.swift in Sources */,
 				F7BA01E025B349E9000B9811 /* ValidationTests.swift in Sources */,
 				F7BA01E225B349E9000B9811 /* KeyserverTests.swift in Sources */,
 				F7BA01F525B4EC73000B9811 /* chachaTests.swift in Sources */,
@@ -517,6 +565,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -580,6 +629,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;

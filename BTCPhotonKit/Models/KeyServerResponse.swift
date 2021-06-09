@@ -10,7 +10,7 @@ import Foundation
 
 struct KeyServerResponse: Codable {
     let id:String?
-    //let message:String?
+    let message:String?
     let delay:String?
-    let encryptionKey: String?
+    let encryptionKey: Data?
 }

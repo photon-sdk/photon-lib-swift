@@ -104,4 +104,11 @@ enum Verify {
         return idPred.evaluate(with: id)
     }
     
+    static func isBuffer(_ cipherText: Data?) -> Bool {
+        guard let data = cipherText else{
+            return false
+        }
+        return !data.isEmpty
+    }
+    
 }

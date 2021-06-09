@@ -11,25 +11,34 @@ import Foundation
 public class Keybackup {
     // Handles the backup and restoration of the seed.
     let baseUrl:URL?
-    let cloudStore = CloudStore()
-    let keyserver = Keyserver("")
+    let cloudStore:CloudStore
+    let keyserver:Keyserver
     var chacha = ChaCha()
 
-    init(_ url:String) {
+    init(_ url:String, cloudStore:CloudStore = CloudStore()) {
         baseUrl = URL(string: url)
+        self.cloudStore  = cloudStore
+        keyserver   = Keyserver(url)
     }
     
-    public func checkForExistingBackup() -> Bool{
+    public func checkForExistingBackup( completion: @escaping(Result<Bool, Error>) -> Void){
         /**
          Check for an existing backup in cloud storage. Returns Bool.
 
          - Returns: Bool, depending on whether an existing backup exists.
         */
-        let backup =  cloudStore.getKey()
-        return backup != nil
-    }
+        self.cloudStore.getKey(){
+                    result in
+                    if case .success = result {
+                        completion(.success(true))
+                    }
+                    if case .failure(let error) = result {
+                        completion(.failure(error))
+                    }
+                }
+            }
     
-    func createBackup(data: Data?, pin: String ) throws {
+    func createBackup(data: Data?, pin: String, completion: @escaping(Result<Bool, Error>) -> Void ) {
         /**
          Create an encrypted backup in cloud storage. The backup is encrypted using a random 256 bit encryption key that is stored on the photon-keyserver. A user chosen PIN is used to authenticate the downloading of the encryption key.
 
@@ -38,287 +47,479 @@ public class Keybackup {
             - pin:  A user chosen pin to authenticate to the keyserver
          - Returns: None
         */
-        guard data != nil else {
-            throw  GenericError(message: "Invalid data")
+        guard let data = data else {
+                completion(.failure(GenericError(message: "Invalid data")))
+                return
+            }
+        guard setPin(pin: pin) else{
+                completion(.failure(GenericError(message: "Invalid pin")))
+                return
+            }
+            keyserver.createKey(pin: pin) { result in
+                if case .success(let keyId) = result {
+                    self.keyserver.fetchKey(keyId: keyId) { (resultKey) in
+                        if case .failure(let error) = resultKey {
+                            completion(.failure(error))
+                        }
+                        if case .success(let key ) = resultKey {
+
+                            let ciphertext = try? self.chacha.encrypt(secret:data , key: key )
+                            guard (ciphertext != nil) else {
+                                completion(.failure(GenericError(message: "handle the error")))
+                                return
+                            }
+                            self.cloudStore.putKey(keyId: keyId, ciphertext: ciphertext, completion: completion)
+                        }
+                    }
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+
+            }
+    }
+    
+    /**
+     Restore an encrypted backup from cloud storage. The encryption key is fetched from the photon-keyserver by authenticating via a user chosen PIN.
+
+     - Parameters:
+        - pin: A user chosen pin to authenticate to the keyserver
+     - Returns: The decrypted backup payload
+    */
+    func restoreBackup(pin:String, completion: @escaping
+                            (Result<Data?, Error>) -> Void){
+            guard setPin(pin: pin) else{
+                completion(.failure(GenericError(message: "Invalid pin")))
+                return
+            }
+            fetchKeyId(){
+                result in
+                if case .success(let data) = result {
+                    self.keyserver.fetchKey(keyId: data) { (result) in
+                        if case .success(let encryptionKey) = result {
+                            self.cloudStore.getKey(){
+                                result in
+                                if case .success(let data) = result {
+                                    do {
+                                        if let ciphertext =  data.ciphertext {
+                                             // revisit this
+                                            let plaintext = try self.chacha.decrypt(cipher_bytes: ciphertext , key: encryptionKey)
+                                        completion(.success(plaintext))
+                                        }else{
+                                            completion(.failure(GenericError(message: "parse Error")))
+                                        }
+                                    } catch {
+                                        completion(.failure(error))
+                                    }
+
+                                }
+                                if case .failure(let error) = result {
+                                    completion(.failure(error))
+                                }
+
+                            }
+
+                        }
+                        if case .failure(let error) = result {
+                            completion(.failure(error))
+                        }
+
+                    }
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+            }
+
         }
-        _ = setPin(pin: pin)
-        let keyId = keyserver.createKey(pin: pin)
-        let encryptionKey = keyserver.fetchKey(keyId!)
-        let ciphertext = try? chacha.encrypt(secret: data!, key: encryptionKey!)
-        guard (ciphertext != nil) else {
-            throw GenericError(message: "handle the error")
+    
+
+    /**
+     Change the users chosen PIN on the photon-keyserver.
+
+     - Parameters:
+        - pin:      The users old pin
+        - newPin:   A new pin chosen by the user
+     - Returns:     None
+    */
+    func changePin(pin:String, newPin:String, completion: @escaping(Result<String, Error>) -> Void ){
+            guard setPin(pin: newPin) else{
+                completion(.failure(GenericError(message: "Invalid pin")))
+                return
+            }
+            fetchKeyId(){
+                result in
+
+                if case .success(let keyId) = result {
+                    self.keyserver.changePin(keyId: keyId,
+                                             newPin: newPin,
+                                             completion:completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+
+            }
+
         }
-        try cloudStore.putKey(keyId: keyId!, ciphertext: ciphertext)
-    }
     
-    func restoreBackup(pin:String) throws -> Data? {
-        /**
-         Restore an encrypted backup from cloud storage. The encryption key is fetched from the photon-keyserver by authenticating via a user chosen PIN.
+    /**
+     Register a phone number that can be used to reset the pin later in case she forgets it.
+     This step is completely optional and may not be desirable by some users e.g. if they have saved their pin in a password manager.
 
-         - Parameters:
-            - pin: A user chosen pin to authenticate to the keyserver
-         - Returns: The decrypted backup payload
-        */
-        _ = setPin(pin: pin)
-        let keyId = try fetchKeyId()
-        let encryptionKey = keyserver.fetchKey(keyId)
-        let backup = cloudStore.getKey()
-        guard backup!.keyId == keyId else {
-            return nil
+     - Parameters:
+        - userId:   The user's email address
+        - pin:      A user chosen pin to authenticate to the keyserver
+     - Throws:      Yes
+    */
+    func registerPhone(userId: String, pin: String, completion: @escaping(Result<Bool, Error>) -> Void) {
+            guard Verify.isPhone(userId) else {
+                completion(.failure(GenericError(message: "Invalid pin")))
+                return
+            }
+            registerUser(userId: userId, pin: pin, completion: completion);
         }
-        let ciphertext = backup?.ciphertext
-        let plaintext = try! chacha.decrypt(cipher_bytes: ciphertext!, key: encryptionKey!)
-        return plaintext
-    }
     
-    func changePin(pin:String, newPin:String) throws {
-        /**
-         Change the users chosen PIN on the photon-keyserver.
+    /**
+     Verify the phone number with a code that was sent from the keyserver either via SMS.
 
-         - Parameters:
-            - pin:      The users old pin
-            - newPin:   A new pin chosen by the user
-         - Returns:     None
-        */
-        guard Verify.isPin(newPin) else {
-            throw GenericError(message: "Invalid pin")
+     - Parameters:
+        - userId:   The user's email address
+        - pin:      A user chosen pin to authenticate to the keyserver
+     - Throws:      Yes
+    */
+    
+    func verifyPhone(userId: String, code: String, completion: @escaping(Result<Bool, Error>) -> Void) {
+            guard Verify.isPhone(userId) &&  Verify.isCode(code) else {
+                completion(.failure(GenericError(message: "Invalid phone number")))
+                return
+            }
+            verifyUser(userId: userId, code: code){
+                result in
+                if case .success = result {
+                    self.cloudStore.putPhone(userId: userId){
+                        result in
+                        if case .success = result {
+                            completion(.success(true))
+                        }
+                        if case .failure(let error) = result {
+                            completion(.failure(error))
+                        }
+                    }
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+            }
+
         }
-        _ = setPin(pin: pin)
-        let keyId = try? fetchKeyId()
-        keyserver.changePin(keyId: keyId!, newPin: newPin)
-    }
     
-    func registerPhone(userId: String, pin: String) throws {
-        /**
-         Register a phone number that can be used to reset the pin later in case she forgets it.
-         This step is completely optional and may not be desirable by some users e.g. if they have saved their pin in a password manager.
+    
+    /**
+     Get the phone number stored on the cloud storage which can be used to reset the pin.
 
-         - Parameters:
-            - userId:   The user's email address
-            - pin:      A user chosen pin to authenticate to the keyserver
-         - Throws:      Yes
-        */
-        guard Verify.isPhone(userId) else {
-            throw GenericError(message: "Invalid pin")
+     - Parameters:
+        - secret:           The data being encrypted
+        - key:              the key needed to decrypt the data
+     - Returns:             The user's phone number as a string
+    */
+    func getPhone(completion: @escaping(Result<String?, CloudstoreError>) -> Void){
+          return cloudStore.getPhone(completion:completion );
         }
-        try? registerUser(userId: userId, pin: pin)
-    }
     
-    func VerifyPhone(userId: String, code: String) throws {
-        /**
-         Verify the phone number with a code that was sent from the keyserver either via SMS.
+    
+    /**
+     Delete the phone number from the key server and cloud storage. This should be called before the user wants to change their user id to a new one.
 
-         - Parameters:
-            - userId:   The user's email address
-            - pin:      A user chosen pin to authenticate to the keyserver
-         - Throws:      Yes
-        */
-        guard Verify.isPhone(userId) &&  Verify.isCode(code) else {
-            throw GenericError(message: "Invalid phone number")
+     - Parameters:
+        - userId:   The user's phone number
+        - pin:      A user chosen pin to authenticate to the keyserver
+     - Returns:     None
+    */
+    func removePhone(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ){
+            if (!Verify.isPhone(userId)) {
+                completion(.failure(GenericError(message:"Invalid phone")))
+                return
+            }
+            removeUser(userId: userId, pin: pin){
+                result in
+                if case .success = result {
+                    self.cloudStore.removePhone(completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+
+            }
+
         }
-        try VerifyUser(userId: userId, code: code)
-        try cloudStore.putPhone(userId: userId)
-    }
     
-    func getPhone() -> String? {
-        /**
-         Get the phone number stored on the cloud storage which can be used to reset the pin.
+    
+    /**
+     Register an email address that can be used to reset the pin later in case the user forgets pin. This step is completely optional and may not be desirable by some users. e.g. if they have saved their pin in a password manager.
 
-         - Parameters:
-            - secret:           The data being encrypted
-            - key:              the key needed to decrypt the data
-         - Returns:             The user's phone number as a string
-        */
-        return cloudStore.getPhone()
-    }
-
-    func removePhone(userId:String, pin:String) throws {
-        /**
-         Delete the phone number from the key server and cloud storage. This should be called before the user wants to change their user id to a new one.
-
-         - Parameters:
-            - userId:   The user's phone number
-            - pin:      A user chosen pin to authenticate to the keyserver
-         - Returns:     None
-        */
-        if (!Verify.isPhone(userId)) {
-            throw  GenericError(message: "Invalid phone")
-         }
-        try removeUser(userId: userId, pin: pin)
-        cloudStore.removePhone()
-    }
-
-    func registerEmail(userId:String, pin:String) throws {
-        /**
-         Register an email address that can be used to reset the pin later in case the user forgets pin. This step is completely optional and may not be desirable by some users. e.g. if they have saved their pin in a password manager.
-
-         - Parameters:
-            - userId:   The user's email address
-            - pin:      A user chosen pin to authenticate to the keyserver
-         - Returns:     None
-        */
-        
-        if (!Verify.isEmail(userId)) {
-            throw  GenericError(message: "Invalid email")
+     - Parameters:
+        - userId:   The user's email address
+        - pin:      A user chosen pin to authenticate to the keyserver
+     - Returns:     None
+    */
+    func registerEmail(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ){
+            if (!Verify.isEmail(userId)) {
+                completion(.failure(GenericError(message: "Invalid email")))
+                return
+            }
+            registerUser(userId: userId, pin: pin, completion: completion )
         }
-        try registerUser(userId: userId, pin: pin)
-    }
     
-    func VerifyEmail(userId:String, code:String) throws {
-        /**
-         Verify the email address with a code that was sent from the keyserver either via email.
-
-         - Parameters:
-            - userId:   The user's email address
-            - code:     The verification code sent via SMS or email
-         - Returns:     None
-        */
-        
-        if (!Verify.isEmail(userId)) {
-            throw  GenericError(message: "Invalid email")
-         }
-        if (!Verify.isCode(code)) {
-            throw  GenericError(message: "Invalid code")
-         }
-        try VerifyUser(userId: userId, code: code)
-        try cloudStore.putEmail(userId: userId)
-    }
-
-    func getEmail()->String {
-        /**
-         Get the email address stored on the cloud storage which can be used to reset the pin.
-         - Returns: The user's email address
-        */
-        return cloudStore.getEmail()
-    }
     
-    func removeEmail(userId:String, pin:String) throws {
-        /**
-         Delete the email address from the key server and cloud storage.
-         This should be called before the user wants to change their user id to a new one.
+    /**
+     Verify the email address with a code that was sent from the keyserver either via email.
 
-         - Parameters:
-            - userId:   The user's email address
-            - pin:      A user chosen pin to authenticate to the keyserver
-         - Throws:      Yes
-        */
-        if (!Verify.isEmail(userId)) {
-            throw  GenericError(message: "Invalid email")
-         }
-        try removeUser(userId: userId, pin: pin)
-        cloudStore.removeEmail()
-    }
+     - Parameters:
+        - userId:   The user's email address
+        - code:     The verification code sent via SMS or email
+     - Returns:     None
+    */
+    func verifyEmail(userId:String, code:String,
+                         completion: @escaping(Result<Bool, Error>) -> Void) {
+            if (!Verify.isEmail(userId)) {
+                completion(.failure(GenericError(message: "Invalid email")))
+            }
+            if (!Verify.isCode(code)) {
+                completion(.failure(GenericError(message: "Invalid code")))
+            }
+            verifyUser(userId: userId, code: code){
+                result in
+                if case .success = result {
+                    self.cloudStore.putEmail(userId: userId){
+                        result in
+
+                        if case .success = result {
+                            completion(.success(true))
+                        }
+                        if case .failure(let error) = result {
+                            completion(.failure(error))
+                        }
+                    }
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+
+            }
+        }
     
-    func registerUser(userId:String, pin:String) throws {
-        /**
-         Register the user on the photon server.
-
-         - Parameters:
-            - userId:           Used to identify the user that needs to be removed
-            - pin:              The pin needed to authenticate the request
-         - Throws:              Yes
-        */
-        _ = setPin(pin: pin)
-        let keyId = try fetchKeyId()
-        keyserver.createUser(keyId: keyId, userId: userId)
-    }
+    /**
+     Get the email address stored on the cloud storage which can be used to reset the pin.
+     - Returns: The user's email address
+    */
+    func getEmail(completion: @escaping(Result<String, CloudstoreError>) -> Void){
+            return cloudStore.getEmail(completion:completion);
+        }
     
-    func VerifyUser(userId:String, code:String) throws {
-        /**
-         Verify the user on the photon server
+    
+    /**
+     Delete the email address from the key server and cloud storage.
+     This should be called before the user wants to change their user id to a new one.
 
-         - Parameters:
-            - userId:           Used to identify the user that needs to be removed
-            - code:             The code received to verify this is the correct user
-         - Throws:              Yes
-        */
-        let keyId = try fetchKeyId()
-        keyserver.verifyUser(keyId: keyId, userId: userId, code: code)
-    }
+     - Parameters:
+        - userId:   The user's email address
+        - pin:      A user chosen pin to authenticate to the keyserver
+     - Throws:      Yes
+    */
+    func removeEmail(userId:String, pin:String,
+                         completion: @escaping(Result<Bool, Error>) -> Void){
+            /**
+             * Delete the email address from the key server and cloud storage. This should be called
+             * e.g. before the user wants to change their user id to a new one.
+             * @param  {string} userId  The user's email address
+             * @param  {string} pin     A user chosen pin to authenticate to the keyserver
+             * @return {Void}
+             */
+            if (!Verify.isEmail(userId)) {
+                completion(.failure(GenericError(message: "Invalid email")))
+            }
+            removeUser(userId: userId, pin: pin){
+                result in
+                if case .success = result {
+                    self.cloudStore.removeEmail(completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+            }
+        }
+    
+    
+    /**
+     Register the user on the photon server.
 
-    func removeUser(userId:String, pin:String) throws {
-        /**
-         Remove the user from the keyserver
+     - Parameters:
+        - userId:           Used to identify the user that needs to be removed
+        - pin:              The pin needed to authenticate the request
+     - Throws:              Yes
+    */
+    func registerUser(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void) {
+            _ = setPin(pin: pin)
+            fetchKeyId(){
+                result in
+                if case .success(let keyId) = result {
+                    self.keyserver.createUser(keyId: keyId, userId: userId,completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+            }
 
-         - Parameters:
-            - userId:           Used to identify the user that needs to be removed
-            - pin:              the pin needed to authenticate the request
-         - Throws:              Yes
-        */
-        _ = setPin(pin: pin)
-        let keyId = try fetchKeyId()
-        keyserver.removeUser(keyId: keyId, userId: userId)
-    }
+        }
+    
+    
+    /**
+     Verify the user on the photon server
 
+     - Parameters:
+        - userId:           Used to identify the user that needs to be removed
+        - code:             The code received to verify this is the correct user
+     - Throws:              Yes
+    */
+    func verifyUser(userId:String, code:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+            fetchKeyId(){
+                result  in
+                if case .success(let keyId) = result {
+                    self.keyserver.verifyUser(keyId: keyId, userId: userId, code: code, completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+            }
+        }
+    
+    
+    /**
+     Remove the user from the keyserver
+
+     - Parameters:
+        - userId:           Used to identify the user that needs to be removed
+        - pin:              the pin needed to authenticate the request
+     - Throws:              Yes
+    */
+    func removeUser(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+            guard setPin(pin: pin) else{
+                completion(.failure(GenericError(message: "Invalid pin")))
+                return
+            }
+            fetchKeyId(){
+                result  in
+                if case .success(let keyId) = result {
+                    self.keyserver.removeUser(keyId: keyId,
+                                              userId: userId,
+                                              completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+            }
+
+        }
+    
+    
+    /**
+     In case the user has forgotten their pin and has verified a user id like an emaill address or phone number, this can be used to initiate a pin reset with a 30 day delay (to migidate SIM swap attacks). After calling this function, calling verifyPinReset will start the 30 day time lock. After that time delay finalizePinReset can be called with the new pin.
+
+     - Parameters:
+        - userId:   The user's phone number or email address
+        - code:     The verification code sent via SMS or email
+     - Returns: None
+    */
     // Reset PIN
-    func initPinReset(userId: String) throws {
-        /**
-         In case the user has forgotten their pin and has verified a user id like an emaill address or phone number, this can be used to initiate a pin reset with a 30 day delay (to migidate SIM swap attacks). After calling this function, calling verifyPinReset will start the 30 day time lock. After that time delay finalizePinReset can be called with the new pin.
+    func initPinReset(userId: String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+            guard Verify.isPhone(userId) || Verify.isEmail(userId) else {
+                completion(.failure(GenericError(message: "Invalid userId")))
+                return
+            }
+            fetchKeyId(){
+                result in
+                if case .success(let keyId) = result {
+                    self.keyserver.initPinReset(keyId: keyId, userId: userId,completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
 
-         - Parameters:
-            - userId:   The user's phone number or email address
-            - code:     The verification code sent via SMS or email
-         - Returns: None
-        */
-        guard !Verify.isPhone(userId) && !Verify.isEmail(userId) else {
-            throw GenericError(message: "handle the error")
+            }
+
         }
-        let keyId = try fetchKeyId()
-        keyserver.initPinReset(keyId: keyId, userId: userId)
-    }
     
-    func verifyPinReset(userId:String, code:String, newPin:String) throws {
-        /**
-         Verify the user id with a code and check if the time lock delay is over. This function returns an iso formatted date string which represents the time lock delay. If this value is null it means the delay is over and the user can recover their key using the new pin.
+    /**
+     Verify the user id with a code and check if the time lock delay is over. This function returns an iso formatted date string which represents the time lock delay. If this value is null it means the delay is over and the user can recover their key using the new pin.
 
-         - Parameters:
-            - userId:   The user's phone number or email address
-            - code:     The verification code sent via SMS or email
-            - newPin:   The new pin (at least 4 digits)
-         - Returns: None
-        */
-        guard Verify.isPhone(userId) && Verify.isEmail(userId) || !Verify.isCode(code) || !Verify.isPin(newPin) else {
-            print("handle the error")
-            throw GenericError(message: "handle the error")
+     - Parameters:
+        - userId:   The user's phone number or email address
+        - code:     The verification code sent via SMS or email
+        - newPin:   The new pin (at least 4 digits)
+     - Returns: None
+    */
+    func verifyPinReset(userId:String, code:String, newPin:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+            guard (Verify.isPhone(userId) || Verify.isEmail(userId)) && Verify.isCode(code) && Verify.isPin(newPin) else {
+                print("handle the error")
+                completion(.failure(GenericError(message: "Invalid userId , code or newPin")))
+                return
+            }
+            fetchKeyId(){
+                result in
+                if case .success(let keyId) = result {
+                    self.keyserver.initPinReset(keyId: keyId,
+                                                userId: userId,
+                                                completion: completion)
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+
+            }
+
         }
-        let keyId = try fetchKeyId()
-        keyserver.initPinReset(keyId: keyId, userId: userId)
-    }
     
-    func setPin(pin:String) -> Bool {
-        /**
-         Set the users pin to the provided number.
+    /**
+     Set the users pin to the provided number.
 
-         - Parameters:
-            - pin:      The new pin (at least 4 digits)
-         - Returns:     True if the pin is a number, false otherwise
-        */
-        if (!Verify.isPin(pin)) {
-            return false
+     - Parameters:
+        - pin:      The new pin (at least 4 digits)
+     - Returns:     True if the pin is a number, false otherwise
+    */
+    func setPin(pin: String) -> Bool {
+            if (!Verify.isPin(pin)) {
+                return false
+            }
+            keyserver.setPin(pin: pin)
+            return true
         }
-        keyserver.setPin(pin: pin)
-        return true
-    }
-
-    func fetchKeyId() throws -> String {
-        /**
-         Fetch the keyid stored in iCloud
-         
-         - Throws:      True
-         - Returns:     The keyid as a string
-        */
-        let backup = cloudStore.getKey()
-        guard backup?.keyId != nil else {
-            throw GenericError(message:"No key id found. Call checkForExistingBackup() first.")
+    
+    /**
+     Fetch the keyid stored in iCloud
+     
+     - Throws:      True
+     - Returns:     The keyid as a string
+    */
+    func fetchKeyId(completion:@escaping (Result<String,Error>) -> Void){
+        cloudStore.getKey(){
+            result in
+            if case .success(let data) = result {
+                guard Verify.isId(data.keyId) else{
+                    completion(.failure(GenericError(message:"Invalid key id")))
+                    return
+                }
+                completion(.success(data.keyId))
+            }
+            if case .failure(let error) = result {
+                completion(.failure(error))
+            }
         }
-        return backup!.keyId
     }
 }
-
 struct GenericError: Error,LocalizedError {
     let message: String
     var errorDescription: String? {
         return message
     }
 }
-

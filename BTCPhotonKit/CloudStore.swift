@@ -11,18 +11,26 @@ import CloudKit
 
 /// Enum to maintain error conditions in the app.
 enum CloudstoreError: Error {
-    case tooShort
-    case alreadyPresent
-    case invalid
-    case notFound
-    case customMessage(message: String)
+    case TooShort
+    case AlreadyPresent
+    case Invalid
+    case NotFound
+    case CustomMessage(message: String)
+}
+
+enum RecordKey: String {
+    case phone
+    case email
+    case keyId
+    case shortKeyID
+    case ciphertext
+    case timeValue
 }
 
  ///  Manages getting, setting, and removing encrypted keys, phone number and email from iCloud using native API's.
 public class CloudStore {
     /*
-     
-     Model:
+     CloudKit Model:
      Phone
      Email
      key_id
@@ -31,109 +39,211 @@ public class CloudStore {
      */
     
     let VERSION = "1"
-    let KEY_ID: String
-    let PHONE: String
-    let EMAIL: String
-
-    let store = CKContainer.default().privateCloudDatabase
+    //let KEY_ID: String
+    //let PHONE: String
+    //let EMAIL: String
+    var store:CloudDAO
     
-    init() {
+    
+    init(store:CloudDAO = CloudKitDAO() ) {
+        self.store = store
         KEY_ID = "\(VERSION)_photon_key_id"
         PHONE = "\(VERSION)_photon_phone"
         EMAIL = "\(VERSION)_photon_email"
     }
     
-    func putKey(keyId: String, ciphertext: Data?) throws {
-        /// Encrypted key storage
-        /// - Parameters:
-        ///   - keyId: keyId description
-        ///   - ciphertext: ciphertext description
-        /// - Throws: description
-        if !Verify.isId(keyId) || ciphertext != nil {
-            throw CloudstoreError.invalid
+    /// Encrypted key storage
+    /// - Parameters:
+    ///   - keyId: keyId description
+    ///   - ciphertext: ciphertext description
+    func putKey(keyId: String, ciphertext: Data?, completion: @escaping(Result<Bool, Error>) -> Void) {
+        if !Verify.isId(keyId) || !Verify.isBuffer(ciphertext) {
+            completion(.failure(CloudstoreError.Invalid))
+            return
         }
-        if getItem(keyId: KEY_ID) as! String != ""{
-            throw CloudstoreError.alreadyPresent
+
+        getItem(keyId: .keyId) { (result) in
+
+            if case .success(let data) = result,
+               let key:String? = self.getFirstValue(records:data, key: .keyId),
+               key != nil {
+                completion(.failure(CloudstoreError.AlreadyPresent))
+                return
+            }
+
+            self.setItem(keyId: .keyId, value: keyId){
+                (result) in
+                if case .success(_) = result {
+
+                    self.setItem(keyId: .shortKeyID,
+                                 value: StoreItem(keyId: keyId,
+                                                  ciphertext: ciphertext,
+                                                  timeValue: CloudStore.timeToISOString())){
+                        (result) in
+                        if case .failure(let error) = result {
+                            completion(.failure(error))
+                        }else{
+                            completion(.success(true))
+                        }
+
+                    }
+                    return
+                }
+                if case .failure(let error) = result {
+                    completion(.failure(error))
+                }
+
+            }
+
         }
-        setItem(keyId: KEY_ID, value: keyId)
-        setItem(keyId: shortKeyId(keyId), value: stringifyKey(keyId: keyId, ciphertext: ciphertext))
     }
     
-    func removeKeyId(keyId: Any) throws {
-        /// - Parameter keyId: keyId
-        removeItem(keyId: KEY_ID)
-    }
+    /// Get Encrypted key storage
+    /// - Returns: return key
+    func getKey(completion: @escaping(Result<StoreItem, CloudstoreError>) -> Void){
+        getItem(keyId: .keyId) { (result) in
 
-    func putPhone(userId: String) throws {
-        /// Save userPhone in local storate /iCloud Storage
-        /// - Parameter userId: userId
-        /// - Throws: description
-        if !Verify.isPhone(userId) {
-            throw  CloudstoreError.invalid
+            if case .failure(let error) = result {
+                completion(.failure(error))
+                return
+            }
+
+            if case .success(let data) = result,
+               let key:String? = self.getFirstValue(records:data, key: .keyId){
+
+                guard key != nil else {
+                    completion(.failure(.CustomMessage(message: "invalid value")))
+                    return
+                }
+
+                self.getItem(keyId: .shortKeyID){
+                    (result) in
+
+                    if case .failure(let error) = result {
+                        completion(.failure(error))
+                        return
+                    }
+                    if case .success(let data) = result{
+                        if let keyData = data?.first?.store{
+                            return // review
+                                completion(.success(keyData))
+                        }else{
+                            completion(.failure(.CustomMessage(message: "invalid value")))
+                        }
+
+                    }
+                }
+            }
         }
-        // Cloudstore has a seperate Phone record
-        setItem(keyId: PHONE, value: userId)
+    }
+    
+    
+    /// Remove KeyId
+    /// - Parameter keyId: keyId
+    func removeKeyId(completion: @escaping(Result<Bool, Error>) -> Void) {
+        removeItem(keyId: .keyId,completion: completion)
     }
 
-    func getPhone() -> String? {
-        /// - Returns: phone
-        // Cloudstore has a seperate Phone record
-        return getItem(keyId: PHONE) as? String
-    }
 
-    func removePhone() {
-        /// - Parameter phone: phone
-        // Cloudstore has a seperate Phone record
-        removeItem(keyId: PHONE)
-    }
-
-    func putEmail(userId: String) throws {
-        // Consider replacing Throws with Results
-        
-        // Save Email address in iCloud
-        // - Parameter userId: userId
-        // - Throws: description
-        if !Verify.isEmail(userId) {
-            throw  CloudstoreError.invalid
+    /// Save userPhone in local storage /iCloud Storage
+    /// - Parameter userId: userId
+    func putPhone(userId:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+        if (!Verify.isPhone(userId)) {
+            completion(.failure(.Invalid))
+            return
         }
-        // Cloudstore has a seperate Email record
-        setItem(keyId: EMAIL, value: userId)
+        setItem(keyId: .phone, value: userId){
+            (result) in
+            completion(result)
+        }
     }
 
-    func getEmail() -> String {
-        // Get Email address from iCloud
-        // - Returns: email address
-        
-        // Cloudstore has a seperate Email record
-        return getItem(keyId: EMAIL) as! String
+    /// Get Phone
+    /// - Returns: phone
+    func getPhone(completion: @escaping(Result<String?, CloudstoreError>) -> Void) {
+        return getItem(keyId: .phone){
+            result in
+
+            if case .failure(let error) = result {
+                completion(.failure(error))
+                return
+            }
+
+            if case .success(let data) = result,
+               let phone:String? = self.getFirstValue(records:data, key: .phone){
+
+                guard let phone = phone else {
+                    completion(.failure(.CustomMessage(message: "invalid value")))
+                    return
+                }
+                completion(.success(phone))
+            }
+        }
     }
 
-    func removeEmail() {
-        // Remove Email address from local storate /iCloud Storage
-        // - Parameter email:email address
-        
-        // Cloudstore has a seperate Email record
-        removeItem(keyId: EMAIL)
+    /// Remove Phone
+    /// - Parameter phone: phone
+    func removePhone(completion: @escaping(Result<Bool, Error>) -> Void) {
+        removeItem(keyId: .phone ,completion: completion)
     }
+
+
+    /**Save Email address in local storage /iCloud Storage
+     - Parameter userId: userId
+     */
+    func putEmail(userId: String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+        if (!Verify.isEmail(userId)) {
+            completion(.failure(.Invalid))
+            return
+        }
+        setItem(keyId: .email, value: userId){
+            result in
+            completion(result)
+        }
+    }
+
+    /**Get Email address from local storage /iCloud Storage
+     - Returns: email address
+     */
+    func getEmail(completion: @escaping(Result<String, CloudstoreError>) -> Void) {
+
+        return getItem(keyId: .email){
+            result in
+
+            if case .failure(let error) = result {
+                completion(.failure(error))
+                return
+            }
+
+            if case .success(let data) = result,
+               let email:String? = self.getFirstValue(records:data, key: .email){
+
+                guard let email = email else {
+                    completion(.failure(.CustomMessage(message: "invalid value")))
+                    return
+                }
+                completion(.success(email))
+            }
+        }
+    }
+
+    func removeEmail(completion: @escaping(Result<Bool, Error>) -> Void) {
+        /**Remove Email address from local storage /iCloud Storage
+         - Parameter email:email address
+         */
+        removeItem(keyId: .email, completion: completion)
+    }
+    
+    
     
     // Helper functions
-    
+    /*
     func shortKeyId(_ keyId: String) -> String {
         let shortId = keyId.replacingOccurrences(of: "/-/g", with: "").prefix(8)
         return "\(VERSION)_\(shortId)"
     }
-
-    func stringifyKey(keyId: String, ciphertext: Data?) -> Any {
-        let timeValue = StringHelpers.time_toISOString()
-        return StringHelpers.stringify(json: [keyId: keyId, ciphertext: ciphertext?.base64EncodedString(), timeValue: timeValue])
-    }
-
-    func parseKey(item: Data) -> CloudData {
-        // receives JSON, and maps it using the CloudData struct, and returns it
-        let key: CloudData = try! JSONDecoder().decode(CloudData.self, from: item)
-        return key
-    }
-
+    
+    
     func setItem(keyId: String, value: Any) {
         let record = CKRecord(recordType: value as! CKRecord.RecordType)
         // DETERMINE THE KEY BEING SET (PHONE, EMAIL, KEYID, AND THEN USE IT IN 'forKey')
@@ -183,31 +293,94 @@ public class CloudStore {
         }
         return key // This isn't correct but walk through this with Tankred
     }
+    
+ */
+    static func timeToISOString()->String{
+        let date = Date()
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(secondsFromGMT: 0)
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        return formatter.string(from: date)
 
-    static func delete(recordID: CKRecord.ID, completion: @escaping (Result<CKRecord.ID, Error>) -> Void) {
-        CKContainer.default().publicCloudDatabase.delete(withRecordID: recordID) { (recordID, err) in
-            DispatchQueue.main.async {
-                if let err = err {
-                    completion(.failure(err))
-                    return
-                }
-                guard let recordID = recordID else {
-                    completion(.failure(CloudstoreError.invalid))
-                    return
-                }
-                completion(.success(recordID))
+    }
+
+    func setItem(keyId: RecordKey,value: StoreItem, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+        let record = CKRecord(recordType: keyId.rawValue)
+        record.store = value
+        setItem(record:record, completion: completion)
+    }
+
+    func setItem(keyId: RecordKey,value:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+        let record = CKRecord(recordType: keyId.rawValue)
+        record[keyId] = value
+        setItem(record:record, completion: completion)
+    }
+
+    func setItem(record:CKRecord, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+        store.save(record) { (savedRecord, error) in
+            if let error = error {
+                completion(.failure(.CustomMessage(message:
+                                                    error.localizedDescription )))
+            } else {
+                completion(.success(savedRecord))
             }
+        }
+
+    }
+
+    func getItem(keyId: RecordKey, completion: @escaping(Result<[CKRecord]?, CloudstoreError>) -> Void){
+        let query = CKQuery.init(recordType: keyId.rawValue, predicate: NSPredicate(value: true))
+        store.perform(query, inZoneWith: nil) { records, error in
+            if let err = error{
+                completion(.failure(.CustomMessage(message:err.localizedDescription)))
+                return
+            }
+            completion(.success(records))
         }
     }
 
-    func removeItem(keyId: Any) {
+    func getFirstValue<T: Any>( records: [CKRecord]?, key: RecordKey, type: T.Type? = nil) -> T? {
+        return (records?.first?[key] as? T) ?? nil
+    }
+
+    func delete(recordID: CKRecord.ID, completion: @escaping (Result<CKRecord.ID, Error>) -> ()) {
+        store.delete(withRecordID: recordID) { (recordID, err) in
+
+            if let err = err {
+                completion(.failure(err))
+                return
+            }
+            guard let recordID = recordID else {
+                completion(.failure(CloudstoreError.Invalid))
+                return
+            }
+            completion(.success(recordID))
+
+        }
+    }
+
+    func removeItem(keyId: RecordKey, completion: @escaping (Result<Bool, Error>) -> ()) {
         // MARK: - delete from CloudKit
-        CloudStore.delete(recordID: keyId as! CKRecord.ID) { (result) in
-            switch result {
-            case .success:
-                print("Successfully deleted item")
-            case .failure(let err):
-                print(err.localizedDescription)
+        getItem(keyId: keyId) {
+            (result) in
+            if case .success(let data) = result {
+                if let item = data?.first{
+                    self.delete(recordID: item.recordID){
+                        result in
+                        if case .success = result {
+                            completion(.success(true))
+                        }
+                        if case .failure(let error) = result {
+                            completion(.failure(error))
+                        }
+                    }
+                }else{
+                    completion(.failure(CloudstoreError.Invalid))
+                }
+            }
+            if case .failure(let error) = result {
+                completion(.failure(error))
             }
         }
     }
@@ -216,13 +389,13 @@ public class CloudStore {
 extension CloudstoreError: Equatable {
     public static func ==(lhs: CloudstoreError, rhs: CloudstoreError) -> Bool {
         switch (lhs, rhs) {
-        case (.tooShort, .tooShort):
+        case (.TooShort, .TooShort):
             return true
-        case (.invalid, .invalid):
+        case (.Invalid, .Invalid):
             return true
-        case (.alreadyPresent, .alreadyPresent):
+        case (.AlreadyPresent, .AlreadyPresent):
             return true
-        case (.customMessage, .customMessage):
+        case (.CustomMessage(_), .CustomMessage(_)):
             return true
         default:
             return false
