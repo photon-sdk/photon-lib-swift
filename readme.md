@@ -2,7 +2,7 @@
  Coming soon.
 
 #Usage
-## installing the library
+## Installing the library
 
 #### Using Swift package manager
 not implemented yet.
@@ -11,14 +11,14 @@ not implemented yet.
 #### Installing mannaually
 Copy the contents of [BTCPhotonKit](./BTCPhotonKit) to your xcode project
 
-### configure Xcode
+### Configuring Xcode
 * Enable the Cloudkit capability within xcode settings
 
 
 ## Example usage
 
 ##### Start the key server 
-Ensure the server is running
+Ensure the server is running [Coming soon]
 
 ##### Generate a secret and encrypt it using cha-cha
 ```swift
