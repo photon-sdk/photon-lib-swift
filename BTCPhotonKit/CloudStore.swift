@@ -9,13 +9,12 @@
 import Foundation
 import CloudKit
 
-/// Enum to maintain error conditions in the app.
 enum CloudstoreError: Error {
-    case TooShort
-    case AlreadyPresent
-    case Invalid
-    case NotFound
-    case CustomMessage(message: String)
+    case tooShort
+    case alreadyPresent
+    case invalid
+    case notFound
+    case customMessage(message: String)
 }
 
 enum RecordKey: String {
@@ -42,7 +41,7 @@ public class CloudStore {
     //let KEY_ID: String
     //let PHONE: String
     //let EMAIL: String
-    var store:CloudDAO
+    let store:CloudDAO
     
     
     init(store:CloudDAO = CloudKitDAO() ) {
@@ -57,17 +56,17 @@ public class CloudStore {
     ///   - keyId: keyId description
     ///   - ciphertext: ciphertext description
     func putKey(keyId: String, ciphertext: Data?, completion: @escaping(Result<Bool, Error>) -> Void) {
+        
         if !Verify.isId(keyId) || !Verify.isBuffer(ciphertext) {
-            completion(.failure(CloudstoreError.Invalid))
+            completion(.failure(CloudstoreError.invalid))
             return
         }
-
         getItem(keyId: .keyId) { (result) in
 
             if case .success(let data) = result,
                let key:String? = self.getFirstValue(records:data, key: .keyId),
                key != nil {
-                completion(.failure(CloudstoreError.AlreadyPresent))
+                completion(.failure(CloudstoreError.alreadyPresent))
                 return
             }
 
@@ -112,7 +111,7 @@ public class CloudStore {
                let key:String? = self.getFirstValue(records:data, key: .keyId){
 
                 guard key != nil else {
-                    completion(.failure(.CustomMessage(message: "invalid value")))
+                    completion(.failure(.customMessage(message: "invalid value")))
                     return
                 }
 
@@ -128,7 +127,7 @@ public class CloudStore {
                             return // review
                                 completion(.success(keyData))
                         }else{
-                            completion(.failure(.CustomMessage(message: "invalid value")))
+                            completion(.failure(.customMessage(message: "invalid value")))
                         }
 
                     }
@@ -149,7 +148,7 @@ public class CloudStore {
     /// - Parameter userId: userId
     func putPhone(userId:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         if (!Verify.isPhone(userId)) {
-            completion(.failure(.Invalid))
+            completion(.failure(.invalid))
             return
         }
         setItem(keyId: .phone, value: userId){
@@ -173,7 +172,7 @@ public class CloudStore {
                let phone:String? = self.getFirstValue(records:data, key: .phone){
 
                 guard let phone = phone else {
-                    completion(.failure(.CustomMessage(message: "invalid value")))
+                    completion(.failure(.customMessage(message: "invalid value")))
                     return
                 }
                 completion(.success(phone))
@@ -193,7 +192,7 @@ public class CloudStore {
      */
     func putEmail(userId: String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         if (!Verify.isEmail(userId)) {
-            completion(.failure(.Invalid))
+            completion(.failure(.invalid))
             return
         }
         setItem(keyId: .email, value: userId){
@@ -219,7 +218,7 @@ public class CloudStore {
                let email:String? = self.getFirstValue(records:data, key: .email){
 
                 guard let email = email else {
-                    completion(.failure(.CustomMessage(message: "invalid value")))
+                    completion(.failure(.customMessage(message: "invalid value")))
                     return
                 }
                 completion(.success(email))
@@ -320,7 +319,7 @@ public class CloudStore {
     func setItem(record:CKRecord, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         store.save(record) { (savedRecord, error) in
             if let error = error {
-                completion(.failure(.CustomMessage(message:
+                completion(.failure(.customMessage(message:
                                                     error.localizedDescription )))
             } else {
                 completion(.success(savedRecord))
@@ -333,7 +332,7 @@ public class CloudStore {
         let query = CKQuery.init(recordType: keyId.rawValue, predicate: NSPredicate(value: true))
         store.perform(query, inZoneWith: nil) { records, error in
             if let err = error{
-                completion(.failure(.CustomMessage(message:err.localizedDescription)))
+                completion(.failure(.customMessage(message:err.localizedDescription)))
                 return
             }
             completion(.success(records))
@@ -352,7 +351,7 @@ public class CloudStore {
                 return
             }
             guard let recordID = recordID else {
-                completion(.failure(CloudstoreError.Invalid))
+                completion(.failure(CloudstoreError.invalid))
                 return
             }
             completion(.success(recordID))
@@ -376,7 +375,7 @@ public class CloudStore {
                         }
                     }
                 }else{
-                    completion(.failure(CloudstoreError.Invalid))
+                    completion(.failure(CloudstoreError.invalid))
                 }
             }
             if case .failure(let error) = result {
@@ -389,13 +388,13 @@ public class CloudStore {
 extension CloudstoreError: Equatable {
     public static func ==(lhs: CloudstoreError, rhs: CloudstoreError) -> Bool {
         switch (lhs, rhs) {
-        case (.TooShort, .TooShort):
+        case (.tooShort, .tooShort):
             return true
-        case (.Invalid, .Invalid):
+        case (.invalid, .invalid):
             return true
-        case (.AlreadyPresent, .AlreadyPresent):
+        case (.alreadyPresent, .alreadyPresent):
             return true
-        case (.CustomMessage(_), .CustomMessage(_)):
+        case (.customMessage(_), .customMessage(_)):
             return true
         default:
             return false

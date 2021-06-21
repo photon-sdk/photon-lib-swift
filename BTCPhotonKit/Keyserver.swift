@@ -84,8 +84,7 @@ public class Keyserver {
     ///   - completion: The encryption key buffer
     func fetchKey(keyId:String, completion: @escaping(Result<Data, Error>) -> Void) {
 
-        let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)",
-                                  headers: headerWithAuthentication)
+        let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)", headers: headerWithAuthentication)
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
         { (result) in
             if case .success(let data) = result{
@@ -122,8 +121,7 @@ public class Keyserver {
     ///   - completion: Success
     func changePin(keyId:String,newPin:String,completion: @escaping(Result<String, Error>) -> Void) {
         let requestBody = try? NetworkBody(dictionary: ["newPin":newPin])
-        let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)",
-                                  headers: headerWithAuthentication, body: requestBody)
+        let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)", headers: headerWithAuthentication, body: requestBody)
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
         { (result) in
             if case .success = result{
@@ -219,8 +217,7 @@ public class Keyserver {
     ///   - completion: Result<Bool, Error
     func initPinReset(keyId:String, userId:String, completion: @escaping(Result<Bool, Error>) -> Void) {
         let userId = userId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
-        let request  = APIRequest(url:baseUrl,
-                                  path: "/v2/key/\(keyId)/user/\(userId)/reset")
+        let request  = APIRequest(url:baseUrl, path: "/v2/key/\(keyId)/user/\(userId)/reset")
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
         { (result) in
             if case .success = result{

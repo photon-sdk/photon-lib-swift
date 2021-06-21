@@ -1,24 +1,51 @@
 #Overview
- Coming soon.
+Photon is an SDK for managing encrypted private keys in the cloud.
+
+For the benefits and threat model on storing secrets on iCloud please see here.
+
+There are 3 components to Photon:
+- key server run by the wallet provider
+    - stores high entropy encryption keys and provides server side security such as rate limited PIN authentication
+- The users iCloud
+- The bitcoin wallet
+    - this is the client application the user interacts with
+This SDK is for bitcoin wallet developers who want to implement Photon key management in their app.
+
+This SDK should be used within a iOS wallet to:
+- generate encryption keys
+- encrypt private keys
+- interact with the users iCloud account
+- interact with your keyserver
+
+A demo Swift iOS application will be available in September, which documents how the Photon components work together in a final product. The application will be open source.
 
 #Usage
 ## Installing the library
 
 #### Using Swift package manager
-not implemented yet.
+Not yet implemented.
+
 #### Using Cocoapods
-not implemented yet.
+Not yet implemented.
+
 #### Installing mannaually
-Copy the contents of [BTCPhotonKit](./BTCPhotonKit) to your xcode project
+Copy the contents of [BTCPhotonKit](./BTCPhotonKit) to your xcode project.
 
 ### Configuring Xcode
 * Enable the Cloudkit capability within xcode settings
 
+* ##### Using Xcode automatically manage signing
+Follow [Apple documentaion](https://developer.apple.com/documentation/cloudkit/enabling_cloudkit_in_your_app) or follow the images below
+     
+     ![alt text](./images/a.png)
+     ![alt text](./images/b.png)
+     ![alt text](./images/c.png)
+     ![alt text](./images/d.png)
 
 ## Example usage
 
 ##### Start the key server 
-Ensure the server is running [Coming soon]
+Ensure the server is running: [Photon KeyServer](https://github.com/photon-sdk/photon-keyserver)
 
 ##### Generate a secret and encrypt it using cha-cha
 ```swift
@@ -31,6 +58,7 @@ Ensure the server is running [Coming soon]
              return Data(Array($0))
          })
  
+ // sealedBox is the encrypted seed/secret
  let sealedBox = try! cha.encrypt(secret: encryptedSecret!, key: keyAsData)
 ```
 ##### Store the encryption key on the keyserver
@@ -38,8 +66,7 @@ Ensure the server is running [Coming soon]
  let keyServer = Keyserver("http://localhost:8000")
  keyServer.createKey(pin: pin) { (result) in
             if case .success(let data) = result {
-                // if our session will return an error
-                // this will not set
+                // yay, it worked!
              }
         }
 ```
@@ -48,7 +75,7 @@ Ensure the server is running [Coming soon]
 let cloudStore = CloudStore()
 cloudStore.putKey(keyId: keyId, ciphertext: ciphertext) { (result) in
             if case .success(let status) = result {
-                mResponse = status
+                response = status
             }
          }
 
