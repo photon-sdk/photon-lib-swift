@@ -1,4 +1,4 @@
-#Overview
+# Overview
 Photon is an SDK for managing encrypted private keys in the cloud.
 
 For the benefits and threat model on storing secrets on iCloud please see here.
@@ -19,7 +19,7 @@ This SDK should be used within a iOS wallet to:
 
 A demo Swift iOS application will be available in September, which documents how the Photon components work together in a final product. The application will be open source.
 
-#Usage
+# Usage
 ## Installing the library
 
 #### Using Swift package manager
