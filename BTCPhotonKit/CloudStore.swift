@@ -18,9 +18,9 @@ enum CloudstoreError: Error {
 }
 
 enum RecordKey: String {
-    case phone
-    case email
-    case keyId
+    case phone = "1_photon_phone"
+    case email = "1_photon_email"
+    case keyId = "1_photon_key_id"
     case shortKeyID
     case ciphertext
     case timeValue
@@ -46,9 +46,6 @@ public class CloudStore {
     
     init(store:CloudDAO = CloudKitDAO() ) {
         self.store = store
-        KEY_ID = "\(VERSION)_photon_key_id"
-        PHONE = "\(VERSION)_photon_phone"
-        EMAIL = "\(VERSION)_photon_email"
     }
     
     /// Encrypted key storage
