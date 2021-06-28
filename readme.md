@@ -37,10 +37,10 @@ Copy the contents of [BTCPhotonKit](./BTCPhotonKit) to your xcode project.
 * ##### Using Xcode automatically manage signing
 Follow [Apple documentaion](https://developer.apple.com/documentation/cloudkit/enabling_cloudkit_in_your_app) or follow the images below
      
-     ![Alt text](./images/a.png?raw=true)
-     ![Alt text](./images/b.png?raw=true)
-     ![Alt text](./images/c.png?raw=true)
-     ![Alt text](./images/d.png?raw=true)
+![Alt text](images/a.png?raw=true)
+![Alt text](images/b.png?raw=true)
+![Alt text](images/c.png?raw=true)
+![Alt text](images/d.png?raw=true)
 
 ## Example usage
 
