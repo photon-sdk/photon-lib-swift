@@ -9,14 +9,16 @@
 import Foundation
 import CloudKit
 
-class CloudKitDAO:CloudDAO {
+public class CloudKitDAO:CloudDAO {
     var store = CKContainer.default().privateCloudDatabase
+    
+    public init() { }
 
-    func fetch(withRecordID recordID: CKRecord.ID, completionHandler: @escaping (CKRecord?, Error?) -> Void){
+    public func fetch(withRecordID recordID: CKRecord.ID, completionHandler: @escaping (CKRecord?, Error?) -> Void){
         store.fetch(withRecordID: recordID, completionHandler: completionHandler)
     }
 
-    func save(_ record: CKRecord, completionHandler: @escaping (CKRecord?, Error?) -> Void){
+    public  func save(_ record: CKRecord, completionHandler: @escaping (CKRecord?, Error?) -> Void){
         store.save(record, completionHandler: completionHandler)
     }
 
@@ -24,24 +26,23 @@ class CloudKitDAO:CloudDAO {
         store.delete(withRecordID: recordID, completionHandler: completionHandler)
     }
 
-    func perform(_ query: CKQuery, inZoneWith zoneID: CKRecordZone.ID?, completionHandler: @escaping ([CKRecord]?, Error?) -> Void){
+    public func perform(_ query: CKQuery, inZoneWith zoneID: CKRecordZone.ID?, completionHandler: @escaping ([CKRecord]?, Error?) -> Void){
         store.perform(query,inZoneWith :zoneID,   completionHandler: completionHandler)
     }
 
-    func fetchAllRecordZones(completionHandler: @escaping ([CKRecordZone]?, Error?) -> Void){
+    public func fetchAllRecordZones(completionHandler: @escaping ([CKRecordZone]?, Error?) -> Void){
         store.fetchAllRecordZones(completionHandler: completionHandler)
     }
 
-    func fetch(withRecordZoneID zoneID: CKRecordZone.ID, completionHandler: @escaping (CKRecordZone?, Error?) -> Void){
+    public func fetch(withRecordZoneID zoneID: CKRecordZone.ID, completionHandler: @escaping (CKRecordZone?, Error?) -> Void){
         store.fetch(withRecordZoneID: zoneID, completionHandler: completionHandler)
-
     }
 
-    func save(_ zone: CKRecordZone, completionHandler: @escaping (CKRecordZone?, Error?) -> Void){
+    public func save(_ zone: CKRecordZone, completionHandler: @escaping (CKRecordZone?, Error?) -> Void){
         store.save(zone, completionHandler: completionHandler)
     }
 
-    func delete(withRecordZoneID zoneID: CKRecordZone.ID, completionHandler: @escaping (CKRecordZone.ID?, Error?) -> Void){
+    public func delete(withRecordZoneID zoneID: CKRecordZone.ID, completionHandler: @escaping (CKRecordZone.ID?, Error?) -> Void){
         store.delete(withRecordZoneID: zoneID, completionHandler: completionHandler)
     }
 
@@ -49,10 +50,10 @@ class CloudKitDAO:CloudDAO {
         store.fetchAllSubscriptions(completionHandler: completionHandler)
     }
 
-    func save(_ subscription: CKSubscription, completionHandler: @escaping (CKSubscription?, Error?) -> Void){
+    public func save(_ subscription: CKSubscription, completionHandler: @escaping (CKSubscription?, Error?) -> Void){
         store.save(subscription, completionHandler: completionHandler)
     }
 
-    func clear() {}
+    public func clear() {}
 
 }

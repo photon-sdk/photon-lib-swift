@@ -10,7 +10,7 @@ import Foundation
 import CloudKit
 
 /// This Dao clss has to be overrided to use the CloudKit , it includes all the functions of a cloud datastore
-protocol CloudDAO{
+public protocol CloudDAO{
     
     func fetch(withRecordID recordID: CKRecord.ID, completionHandler: @escaping (CKRecord?, Error?) -> Void)
     
@@ -27,7 +27,6 @@ protocol CloudDAO{
     func save(_ zone: CKRecordZone, completionHandler: @escaping (CKRecordZone?, Error?) -> Void)
     
     func delete(withRecordZoneID zoneID: CKRecordZone.ID, completionHandler: @escaping (CKRecordZone.ID?, Error?) -> Void)
-    
     
     func fetchAllSubscriptions(completionHandler: @escaping ([CKSubscription]?, Error?) -> Void)
     

@@ -9,7 +9,7 @@
 import Foundation
 import CloudKit
 
-struct StoreItem: Codable{
+public struct StoreItem: Codable{
     let keyId:String
     let ciphertext:Data?
     var timeValue:String

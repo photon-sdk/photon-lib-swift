@@ -15,7 +15,7 @@ public class Keybackup {
     let keyserver:Keyserver
     var chacha = ChaCha()
 
-    init(_ url:String, cloudStore:CloudStore = CloudStore()) {
+    public init(_ url:String, cloudStore:CloudStore = CloudStore()) {
         baseUrl = URL(string: url)
         self.cloudStore  = cloudStore
         keyserver   = Keyserver(url)
@@ -38,7 +38,7 @@ public class Keybackup {
                 }
             }
     
-    func createBackup(data: Data?, pin: String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+    public func createBackup(data: Data?, pin: String, completion: @escaping(Result<Bool, Error>) -> Void ) {
         /**
          Create an encrypted backup in cloud storage. The backup is encrypted using a random 256 bit encryption key that is stored on the photon-keyserver. A user chosen PIN is used to authenticate the downloading of the encryption key.
 
@@ -86,7 +86,7 @@ public class Keybackup {
         - pin: A user chosen pin to authenticate to the keyserver
      - Returns: The decrypted backup payload
     */
-    func restoreBackup(pin:String, completion: @escaping
+    public func restoreBackup(pin:String, completion: @escaping
                             (Result<Data?, Error>) -> Void){
             guard setPin(pin: pin) else{
                 completion(.failure(GenericError(message: "Invalid pin")))
@@ -142,7 +142,7 @@ public class Keybackup {
         - newPin:   A new pin chosen by the user
      - Returns:     None
     */
-    func changePin(pin:String, newPin:String, completion: @escaping(Result<String, Error>) -> Void ){
+    public func changePin(pin:String, newPin:String, completion: @escaping(Result<String, Error>) -> Void ){
             guard setPin(pin: newPin) else{
                 completion(.failure(GenericError(message: "Invalid pin")))
                 return
@@ -172,7 +172,7 @@ public class Keybackup {
         - pin:      A user chosen pin to authenticate to the keyserver
      - Throws:      Yes
     */
-    func registerPhone(userId: String, pin: String, completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func registerPhone(userId: String, pin: String, completion: @escaping(Result<Bool, Error>) -> Void) {
             guard Verify.isPhone(userId) else {
                 completion(.failure(GenericError(message: "Invalid pin")))
                 return
@@ -189,7 +189,7 @@ public class Keybackup {
      - Throws:      Yes
     */
     
-    func verifyPhone(userId: String, code: String, completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func verifyPhone(userId: String, code: String, completion: @escaping(Result<Bool, Error>) -> Void) {
             guard Verify.isPhone(userId) &&  Verify.isCode(code) else {
                 completion(.failure(GenericError(message: "Invalid phone number")))
                 return
@@ -223,7 +223,7 @@ public class Keybackup {
         - key:              the key needed to decrypt the data
      - Returns:             The user's phone number as a string
     */
-    func getPhone(completion: @escaping(Result<String?, CloudstoreError>) -> Void){
+    public func getPhone(completion: @escaping(Result<String?, CloudstoreError>) -> Void){
           return cloudStore.getPhone(completion:completion );
         }
     
@@ -236,7 +236,7 @@ public class Keybackup {
         - pin:      A user chosen pin to authenticate to the keyserver
      - Returns:     None
     */
-    func removePhone(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ){
+    public func removePhone(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ){
             if (!Verify.isPhone(userId)) {
                 completion(.failure(GenericError(message:"Invalid phone")))
                 return
@@ -263,7 +263,7 @@ public class Keybackup {
         - pin:      A user chosen pin to authenticate to the keyserver
      - Returns:     None
     */
-    func registerEmail(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ){
+    public func registerEmail(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ){
             if (!Verify.isEmail(userId)) {
                 completion(.failure(GenericError(message: "Invalid email")))
                 return
@@ -280,7 +280,7 @@ public class Keybackup {
         - code:     The verification code sent via SMS or email
      - Returns:     None
     */
-    func verifyEmail(userId:String, code:String,
+    public func verifyEmail(userId:String, code:String,
                          completion: @escaping(Result<Bool, Error>) -> Void) {
             if (!Verify.isEmail(userId)) {
                 completion(.failure(GenericError(message: "Invalid email")))
@@ -313,7 +313,7 @@ public class Keybackup {
      Get the email address stored on the cloud storage which can be used to reset the pin.
      - Returns: The user's email address
     */
-    func getEmail(completion: @escaping(Result<String, CloudstoreError>) -> Void){
+    public func getEmail(completion: @escaping(Result<String, CloudstoreError>) -> Void){
             return cloudStore.getEmail(completion:completion);
         }
     
@@ -327,7 +327,7 @@ public class Keybackup {
         - pin:      A user chosen pin to authenticate to the keyserver
      - Throws:      Yes
     */
-    func removeEmail(userId:String, pin:String,
+    public func removeEmail(userId:String, pin:String,
                          completion: @escaping(Result<Bool, Error>) -> Void){
             /**
              * Delete the email address from the key server and cloud storage. This should be called
@@ -359,7 +359,7 @@ public class Keybackup {
         - pin:              The pin needed to authenticate the request
      - Throws:              Yes
     */
-    func registerUser(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func registerUser(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void) {
             _ = setPin(pin: pin)
             fetchKeyId(){
                 result in
@@ -382,7 +382,7 @@ public class Keybackup {
         - code:             The code received to verify this is the correct user
      - Throws:              Yes
     */
-    func verifyUser(userId:String, code:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+    public func verifyUser(userId:String, code:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
             fetchKeyId(){
                 result  in
                 if case .success(let keyId) = result {
@@ -403,7 +403,7 @@ public class Keybackup {
         - pin:              the pin needed to authenticate the request
      - Throws:              Yes
     */
-    func removeUser(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
+    public func removeUser(userId:String, pin:String, completion: @escaping(Result<Bool, Error>) -> Void ) {
             guard setPin(pin: pin) else{
                 completion(.failure(GenericError(message: "Invalid pin")))
                 return

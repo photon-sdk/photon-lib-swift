@@ -9,13 +9,15 @@
 import Foundation
 import CryptoKit
 
-class ChaCha {
+public class ChaCha {
     
     enum ChaChaErrors: Error {
     case keyIsWrongSize
     }
     
-    func generateKey() -> SymmetricKey {
+    public init(){}
+    
+    public func generateKey() -> SymmetricKey {
         /**
          Generates a random key that is 32 bytes in length
          - Returns:             A 32 byte key
@@ -24,7 +26,7 @@ class ChaCha {
         return key
     }
     
-    func encrypt(secret:Data, key:Data) throws -> Data? {
+    public func encrypt(secret:Data, key:Data) throws -> Data? {
         /**
          Encrypts a secret (Data) using a key (Data). It returns a data object (bytes) or nil.
 
@@ -42,7 +44,7 @@ class ChaCha {
         return sealedBox
     }
     
-    func decrypt(cipher_bytes:Data, key:Data) throws -> Data? {
+    public func decrypt(cipher_bytes:Data, key:Data) throws -> Data? {
         /**
          Decrypts a secret (Data) using a key (Data). It returns a data object (bytes) or nil.
 

@@ -14,7 +14,7 @@ public class Keyserver {
     var client: NetworkingLayer = NetworkingLayer()// used for testing for now
     var baseUrl:String!
     var pin = ""
-    init(_ baseUrl:String) {
+    public init(_ baseUrl:String) {
         self.baseUrl = baseUrl
     }
 
@@ -35,7 +35,7 @@ public class Keyserver {
      * Set the user chosen PIN as a basic authentication http header.
      * @param {string} pin  A user chosen pin to authenticate to the keyserver
      */
-    func setPin(pin:String, completion: ((Result<String, Error>) -> Void)? = nil) {
+    public func setPin(pin:String, completion: ((Result<String, Error>) -> Void)? = nil) {
         self.pin = pin
         completion?(.success(pin))
     }
@@ -60,7 +60,7 @@ public class Keyserver {
     ///   - pin: pin String  A user chosen pin to authenticate to the keyserver
     ///   - completion: Result<String, Error> The key id for the encryption key
     
-    func  createKey(pin:String,completion: @escaping(Result<String, Error>) -> Void) {
+    public func createKey(pin:String,completion: @escaping(Result<String, Error>) -> Void) {
         let requestBody = try? NetworkBody(dictionary: ["pin":pin] )
         let request  = APIRequest(url:baseUrl,path: "/v2/key", method: .post, body: requestBody)
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
@@ -82,7 +82,7 @@ public class Keyserver {
     /// - Parameters:
     ///   - keyId: The key id for the encryption key
     ///   - completion: The encryption key buffer
-    func fetchKey(keyId:String, completion: @escaping(Result<Data, Error>) -> Void) {
+    public func fetchKey(keyId:String, completion: @escaping(Result<Data, Error>) -> Void) {
 
         let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)", headers: headerWithAuthentication)
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
@@ -119,7 +119,7 @@ public class Keyserver {
     ///   - keyId: The key id for the encryption key
     ///   - newPin: The new pin to replace the old on
     ///   - completion: Success
-    func changePin(keyId:String,newPin:String,completion: @escaping(Result<String, Error>) -> Void) {
+    public func changePin(keyId:String,newPin:String,completion: @escaping(Result<String, Error>) -> Void) {
         let requestBody = try? NetworkBody(dictionary: ["newPin":newPin])
         let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)", headers: headerWithAuthentication, body: requestBody)
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
@@ -147,7 +147,7 @@ public class Keyserver {
     ///   - keyId: he key id for the encryption key
     ///   - userId:  The user's phone number or email address
     ///   - completion: Success or error
-    func createUser(keyId:String, userId:String, completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func createUser(keyId:String, userId:String, completion: @escaping(Result<Bool, Error>) -> Void) {
         let requestBody = try? NetworkBody(dictionary: ["userId":userId] )
         let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)/user",
                                   method: .post,
@@ -181,8 +181,7 @@ public class Keyserver {
     ///   - code: The verification code sent via SMS or email
     ///   - completion: completion  Bool, Error
     
-    func verifyUser(keyId:String, userId:String, code:String,
-                    completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func verifyUser(keyId:String, userId:String, code:String, completion: @escaping(Result<Bool, Error>) -> Void) {
         let userId = userId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         let parameters: [String: String] = [
             "code": code,
@@ -215,7 +214,7 @@ public class Keyserver {
     ///   - keyId: The key id for the encryption key
     ///   - userId: The user's phone number or email address
     ///   - completion: Result<Bool, Error
-    func initPinReset(keyId:String, userId:String, completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func initPinReset(keyId:String, userId:String, completion: @escaping(Result<Bool, Error>) -> Void) {
         let userId = userId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         let request  = APIRequest(url:baseUrl, path: "/v2/key/\(keyId)/user/\(userId)/reset")
         client.sendRequest(request: request, responseType: KeyServerResponse.self)
@@ -268,7 +267,7 @@ public class Keyserver {
     }
      */
     
-    func verifyPinReset(keyId:String, userId:String,code:String,newPin:String, completion: @escaping(Result<String, Error>) -> Void) {
+    public func verifyPinReset(keyId:String, userId:String,code:String,newPin:String, completion: @escaping(Result<String, Error>) -> Void) {
         let userId = userId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         let parameters: [String: String] = [
             "code": code,
@@ -307,7 +306,7 @@ public class Keyserver {
     ///   - userId: The user's phone number or email address
     ///   - completion: Bool, Error
 
-    func removeUser(keyId:String, userId:String,
+    public func removeUser(keyId:String, userId:String,
                     completion: @escaping(Result<Bool, Error>) -> Void) {
         let userId = userId.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
         let request  = APIRequest(url:baseUrl,path: "/v2/key/\(keyId)/user/\(userId)",

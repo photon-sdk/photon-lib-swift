@@ -9,7 +9,7 @@
 import Foundation
 import CloudKit
 
-enum CloudstoreError: Error {
+public enum CloudstoreError: Error {
     case tooShort
     case alreadyPresent
     case invalid
@@ -17,7 +17,7 @@ enum CloudstoreError: Error {
     case customMessage(message: String)
 }
 
-enum RecordKey: String {
+public enum RecordKey: String {
     case phone = "1_photon_phone"
     case email = "1_photon_email"
     case keyId = "1_photon_key_id"
@@ -44,7 +44,7 @@ public class CloudStore {
     let store:CloudDAO
     
     
-    init(store:CloudDAO = CloudKitDAO() ) {
+    public init(store:CloudDAO = CloudKitDAO() ) {
         self.store = store
     }
     
@@ -52,7 +52,7 @@ public class CloudStore {
     /// - Parameters:
     ///   - keyId: keyId description
     ///   - ciphertext: ciphertext description
-    func putKey(keyId: String, ciphertext: Data?, completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func putKey(keyId: String, ciphertext: Data?, completion: @escaping(Result<Bool, Error>) -> Void) {
         
         if !Verify.isId(keyId) || !Verify.isBuffer(ciphertext) {
             completion(.failure(CloudstoreError.invalid))
@@ -96,7 +96,7 @@ public class CloudStore {
     
     /// Get Encrypted key storage
     /// - Returns: return key
-    func getKey(completion: @escaping(Result<StoreItem, CloudstoreError>) -> Void){
+    public func getKey(completion: @escaping(Result<StoreItem, CloudstoreError>) -> Void){
         getItem(keyId: .keyId) { (result) in
 
             if case .failure(let error) = result {
@@ -136,14 +136,14 @@ public class CloudStore {
     
     /// Remove KeyId
     /// - Parameter keyId: keyId
-    func removeKeyId(completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func removeKeyId(completion: @escaping(Result<Bool, Error>) -> Void) {
         removeItem(keyId: .keyId,completion: completion)
     }
 
 
     /// Save userPhone in local storage /iCloud Storage
     /// - Parameter userId: userId
-    func putPhone(userId:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+    public func putPhone(userId:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         if (!Verify.isPhone(userId)) {
             completion(.failure(.invalid))
             return
@@ -156,7 +156,7 @@ public class CloudStore {
 
     /// Get Phone
     /// - Returns: phone
-    func getPhone(completion: @escaping(Result<String?, CloudstoreError>) -> Void) {
+    public func getPhone(completion: @escaping(Result<String?, CloudstoreError>) -> Void) {
         return getItem(keyId: .phone){
             result in
 
@@ -179,7 +179,7 @@ public class CloudStore {
 
     /// Remove Phone
     /// - Parameter phone: phone
-    func removePhone(completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func removePhone(completion: @escaping(Result<Bool, Error>) -> Void) {
         removeItem(keyId: .phone ,completion: completion)
     }
 
@@ -187,7 +187,7 @@ public class CloudStore {
     /**Save Email address in local storage /iCloud Storage
      - Parameter userId: userId
      */
-    func putEmail(userId: String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+    public func putEmail(userId: String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         if (!Verify.isEmail(userId)) {
             completion(.failure(.invalid))
             return
@@ -201,7 +201,7 @@ public class CloudStore {
     /**Get Email address from local storage /iCloud Storage
      - Returns: email address
      */
-    func getEmail(completion: @escaping(Result<String, CloudstoreError>) -> Void) {
+    public func getEmail(completion: @escaping(Result<String, CloudstoreError>) -> Void) {
 
         return getItem(keyId: .email){
             result in
@@ -223,7 +223,7 @@ public class CloudStore {
         }
     }
 
-    func removeEmail(completion: @escaping(Result<Bool, Error>) -> Void) {
+    public func removeEmail(completion: @escaping(Result<Bool, Error>) -> Void) {
         /**Remove Email address from local storage /iCloud Storage
          - Parameter email:email address
          */
@@ -301,19 +301,19 @@ public class CloudStore {
 
     }
 
-    func setItem(keyId: RecordKey,value: StoreItem, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+    public func setItem(keyId: RecordKey,value: StoreItem, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         let record = CKRecord(recordType: keyId.rawValue)
         record.store = value
         setItem(record:record, completion: completion)
     }
 
-    func setItem(keyId: RecordKey,value:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+    public func setItem(keyId: RecordKey,value:String, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         let record = CKRecord(recordType: keyId.rawValue)
         record[keyId] = value
         setItem(record:record, completion: completion)
     }
 
-    func setItem(record:CKRecord, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
+    public func setItem(record:CKRecord, completion: @escaping(Result<CKRecord?, CloudstoreError>) -> Void){
         store.save(record) { (savedRecord, error) in
             if let error = error {
                 completion(.failure(.customMessage(message:
@@ -325,7 +325,7 @@ public class CloudStore {
 
     }
 
-    func getItem(keyId: RecordKey, completion: @escaping(Result<[CKRecord]?, CloudstoreError>) -> Void){
+    public func getItem(keyId: RecordKey, completion: @escaping(Result<[CKRecord]?, CloudstoreError>) -> Void){
         let query = CKQuery.init(recordType: keyId.rawValue, predicate: NSPredicate(value: true))
         store.perform(query, inZoneWith: nil) { records, error in
             if let err = error{
@@ -336,11 +336,11 @@ public class CloudStore {
         }
     }
 
-    func getFirstValue<T: Any>( records: [CKRecord]?, key: RecordKey, type: T.Type? = nil) -> T? {
+    public func getFirstValue<T: Any>( records: [CKRecord]?, key: RecordKey, type: T.Type? = nil) -> T? {
         return (records?.first?[key] as? T) ?? nil
     }
 
-    func delete(recordID: CKRecord.ID, completion: @escaping (Result<CKRecord.ID, Error>) -> ()) {
+    public func delete(recordID: CKRecord.ID, completion: @escaping (Result<CKRecord.ID, Error>) -> ()) {
         store.delete(withRecordID: recordID) { (recordID, err) in
 
             if let err = err {
@@ -356,7 +356,7 @@ public class CloudStore {
         }
     }
 
-    func removeItem(keyId: RecordKey, completion: @escaping (Result<Bool, Error>) -> ()) {
+    public func removeItem(keyId: RecordKey, completion: @escaping (Result<Bool, Error>) -> ()) {
         // MARK: - delete from CloudKit
         getItem(keyId: keyId) {
             (result) in
