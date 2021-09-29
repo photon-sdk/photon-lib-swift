@@ -16,7 +16,6 @@
 		F7B0757526711CD6007DDBEF /* Network.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B0757426711CD6007DDBEF /* Network.swift */; };
 		F7BA01C725B34944000B9811 /* BTCPhotonKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F7BA01BD25B34943000B9811 /* BTCPhotonKit.framework */; };
 		F7BA01CE25B34944000B9811 /* BTCPhotonKit.h in Headers */ = {isa = PBXBuildFile; fileRef = F7BA01C025B34943000B9811 /* BTCPhotonKit.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		F7BA01DD25B349E9000B9811 /* MockServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BA01D725B349E9000B9811 /* MockServer.swift */; };
 		F7BA01DE25B349E9000B9811 /* KeybackupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BA01D825B349E9000B9811 /* KeybackupTests.swift */; };
 		F7BA01DF25B349E9000B9811 /* CloudStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BA01D925B349E9000B9811 /* CloudStoreTests.swift */; };
 		F7BA01E025B349E9000B9811 /* ValidationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BA01DA25B349E9000B9811 /* ValidationTests.swift */; };
@@ -80,7 +79,6 @@
 		F7BA01C125B34943000B9811 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F7BA01C625B34944000B9811 /* BTCPhotonKitTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BTCPhotonKitTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7BA01CD25B34944000B9811 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		F7BA01D725B349E9000B9811 /* MockServer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MockServer.swift; sourceTree = "<group>"; };
 		F7BA01D825B349E9000B9811 /* KeybackupTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeybackupTests.swift; sourceTree = "<group>"; };
 		F7BA01D925B349E9000B9811 /* CloudStoreTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CloudStoreTests.swift; sourceTree = "<group>"; };
 		F7BA01DA25B349E9000B9811 /* ValidationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ValidationTests.swift; sourceTree = "<group>"; };
@@ -206,7 +204,6 @@
 				F7BA01DB25B349E9000B9811 /* CurrencyTests.swift */,
 				F7BA01D825B349E9000B9811 /* KeybackupTests.swift */,
 				F7BA01DC25B349E9000B9811 /* KeyserverTests.swift */,
-				F7BA01D725B349E9000B9811 /* MockServer.swift */,
 				F7BA01DA25B349E9000B9811 /* ValidationTests.swift */,
 				F7BA01F425B4EC73000B9811 /* chachaTests.swift */,
 				F7BA01CD25B34944000B9811 /* Info.plist */,
@@ -390,7 +387,6 @@
 			files = (
 				F7B0756D267117EF007DDBEF /* MockCloudDAO.swift in Sources */,
 				F7B0756C267117EF007DDBEF /* MockCloudStore.swift in Sources */,
-				F7BA01DD25B349E9000B9811 /* MockServer.swift in Sources */,
 				F7BA01DE25B349E9000B9811 /* KeybackupTests.swift in Sources */,
 				F7BA01DF25B349E9000B9811 /* CloudStoreTests.swift in Sources */,
 				F7BA01E125B349E9000B9811 /* CurrencyTests.swift in Sources */,
@@ -553,7 +549,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.photon-lib.BTCPhotonKit";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -583,7 +579,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.1;
+				MARKETING_VERSION = 0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.photon-lib.BTCPhotonKit";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
