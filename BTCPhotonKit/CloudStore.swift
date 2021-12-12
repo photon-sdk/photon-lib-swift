@@ -18,9 +18,9 @@ public enum CloudstoreError: Error {
 }
 
 public enum RecordKey: String {
-    case phone = "1_photon_phone"
-    case email = "1_photon_email"
-    case keyId = "1_photon_key_id"
+    case phone = "photon_phone_1"
+    case email = "photon_email_1"
+    case keyId = "photon_key_id_1"
     case shortKeyID
     case ciphertext
     case timeValue
@@ -38,11 +38,7 @@ public class CloudStore {
      */
     
     let VERSION = "1"
-    //let KEY_ID: String
-    //let PHONE: String
-    //let EMAIL: String
     let store:CloudDAO
-    
     
     public init(store:CloudDAO = CloudKitDAO() ) {
         self.store = store
@@ -230,67 +226,6 @@ public class CloudStore {
         removeItem(keyId: .email, completion: completion)
     }
     
-    
-    
-    // Helper functions
-    /*
-    func shortKeyId(_ keyId: String) -> String {
-        let shortId = keyId.replacingOccurrences(of: "/-/g", with: "").prefix(8)
-        return "\(VERSION)_\(shortId)"
-    }
-    
-    
-    func setItem(keyId: String, value: Any) {
-        let record = CKRecord(recordType: value as! CKRecord.RecordType)
-        // DETERMINE THE KEY BEING SET (PHONE, EMAIL, KEYID, AND THEN USE IT IN 'forKey')
-        /*
-         
-         KEY_ID = "\(VERSION)_photon_key_id"
-         PHONE = "\(VERSION)_photon_phone"
-         EMAIL = "\(VERSION)_photon_email"
-         */
-        guard let range = keyId.range(of: "_") else {
-            // need to throw
-            return
-        }
-        let key_type = keyId[range.upperBound...].uppercased()
-        record.setValue(keyId, forKey: key_type)
-        store.save(record) { (_, error) in
-            if error == nil {
-                print("Record Saved")
-            } else {
-                print("Record Not Saved")
-            }
-        }
-    }
-    
-    func getKey() -> CloudData? {
-        let keyId = getItem(keyId: KEY_ID)
-        guard keyId != nil else {
-            print("Handle error")
-            return nil
-        }
-        let key = getItem(keyId: shortKeyId(keyId as! String))
-        return parseKey(item: key as! Data)
-    }
-
-    func getItem(keyId: String) -> Any {
-        // A recordType is a class, a record is an instance
-        var key = CKRecord(recordType: "")
-        let query = CKQuery(recordType: keyId, predicate: NSPredicate(value: true))
-        //let query = CKQuery.init(recordType: keyId as! CKRecord.RecordType, predicate: NSPredicate(value: true))
-        store.perform(query, inZoneWith: nil) { records, error in
-            guard let records = records, error == nil else {
-                // Handle the error
-                return
-            }
-            // key = (records.first!.value(forKey: "keyId") as! String?)! //This is a bit messy. Revist.
-            key = records.first!
-        }
-        return key // This isn't correct but walk through this with Tankred
-    }
-    
- */
     static func timeToISOString()->String{
         let date = Date()
         let formatter = DateFormatter()

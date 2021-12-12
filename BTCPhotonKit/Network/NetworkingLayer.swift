@@ -9,7 +9,7 @@
 import Foundation
 
 struct NetworkingLayer {
-    var session: URLSession!
+    var session: URLSession = URLSession.shared
     func sendRequest<C: Decodable>(request: APIRequest, responseType: C.Type, completion: @escaping (Result<C, APIError>) -> Void) {
         if let urlRequest = request.buildURLRequest() {
             let task =  session.dataTask(with: urlRequest) { (data, response, error) in

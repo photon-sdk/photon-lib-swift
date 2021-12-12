@@ -20,7 +20,7 @@ public class Keyserver {
 
     var headerWithAuthentication:[String:Any]{
         // we have to swap user and password if needed according to server
-        let loginString = String(format: "%@:%@", pin , "" )
+        let loginString = String(format: "%@:%@",  "", pin)
         let loginData = loginString.data(using: String.Encoding.utf8)!
         let base64LoginString = loginData.base64EncodedString()
         return [

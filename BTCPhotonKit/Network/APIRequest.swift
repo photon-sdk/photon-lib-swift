@@ -10,8 +10,7 @@ import Foundation
 
 
 // APIRequest is a Support Class for NetworkLayer
-// here we can create a Requsest easly with all required features our api supports
-// ie. to call a Api in netwokinglayer we need to create a APIrequest
+// We need to create an APIrequest to call an API in the netwokringlayer 
 struct APIRequest {
 
     var baseURL: URL? // base url for call
@@ -32,7 +31,7 @@ struct APIRequest {
 }
 // MARK: Helpers
 extension APIRequest {
-    // this is to create URLRequest and used in networkLayer
+    // this is to create a URLRequest and it's used in networkLayer
     func buildURLRequest() -> URLRequest? {
         guard let baseURL = baseURL else {
             return nil
@@ -46,7 +45,7 @@ extension APIRequest {
 
         return urlRequest
     }
-    // Convert the url to the proper url with path ans base
+    // Add the necesary components to form a complete URL
     var url: URL? {
         guard let baseURL = baseURL else {
             return nil
@@ -92,7 +91,7 @@ private extension APIRequest {
         request.url = components?.url
     }
 
-    // updating URLRequest with headeres
+    // updating URLRequest with headers
     func addHeaders(_ headers: [String: Any]?, to request: inout URLRequest) {
         guard let headers = headers else {
             return
@@ -101,7 +100,7 @@ private extension APIRequest {
         headers.forEach { request.setValue(String(describing: $0.value), forHTTPHeaderField: $0.key) }
     }
 
-    // updating URLRequest with Body
+    // updating URLRequest with the body
     func addRequestBody(_ body: NetworkBody?, to request: inout URLRequest) {
         guard let body = body else {
             return

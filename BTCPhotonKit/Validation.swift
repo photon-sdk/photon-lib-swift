@@ -15,7 +15,7 @@ public enum Verify {
         /**
          - Parameters:
          - email: The email address entered by the user
-         
+          
          - Throws: None
          
          - Returns: Bool
@@ -60,7 +60,7 @@ public enum Verify {
          
          - Returns: Bool
          */
-        // is this a valid (recovery) code?
+        // Evaluates if this a valid (recovery) code.
         let codeRegEx = "^\\d{6}$"
         let codePred = NSPredicate(format:"SELF MATCHES %@", codeRegEx)
         return codePred.evaluate(with: code)
@@ -75,9 +75,9 @@ public enum Verify {
          
          - Returns: Bool
          */
-        // is this a valid pin?
+        // Evaluates if this a valid pin.
         let newlines = CharacterSet.newlines
-        let disallowed = newlines.inverted
+        let disallowed = newlines
         let range_of_newlines = pin.rangeOfCharacter(from: disallowed)
         if range_of_newlines == nil {
             let pinRegEx = "^.{4,256}$"
@@ -97,8 +97,7 @@ public enum Verify {
          
          - Returns: Bool
          */
-        // answers: is this a valid id?
-        
+        // Evaluates if this is a valid id
         let idRegEx = "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
         let idPred = NSPredicate(format:"SELF MATCHES %@", idRegEx)
         return idPred.evaluate(with: id)
